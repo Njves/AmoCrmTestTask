@@ -15,7 +15,7 @@ require 'stateController.php';
 const AUTH_TOKEN = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjMyYWRiNzMzMDY1OWI3ZjU5MDRkYmFhZmVlMWY3ZjcyNjA4ZDZhYWMwODg5N2UyNmFlNGU2Mjc2OGQwYmY5ZDhlNmI0ZDQ3ZDUzMjhjMDM0In0.eyJhdWQiOiJlMTUwNTNlMy0zYTk1LTRlZjMtOWRiZS0xZDU0NTFmYzg1NTEiLCJqdGkiOiIzMmFkYjczMzA2NTliN2Y1OTA0ZGJhYWZlZTFmN2Y3MjYwOGQ2YWFjMDg4OTdlMjZhZTRlNjI3NjhkMGJmOWQ4ZTZiNGQ0N2Q1MzI4YzAzNCIsImlhdCI6MTcxMTQ0OTMwNCwibmJmIjoxNzExNDQ5MzA0LCJleHAiOjE3MjIzODQwMDAsInN1YiI6IjEwODU0NTg2IiwiZ3JhbnRfdHlwZSI6IiIsImFjY291bnRfaWQiOjMxNjU5MzEwLCJiYXNlX2RvbWFpbiI6ImFtb2NybS5ydSIsInZlcnNpb24iOjIsInNjb3BlcyI6WyJjcm0iLCJmaWxlcyIsImZpbGVzX2RlbGV0ZSIsIm5vdGlmaWNhdGlvbnMiLCJwdXNoX25vdGlmaWNhdGlvbnMiXSwiaGFzaF91dWlkIjoiN2Y5Y2FkMzQtZjJkNy00MGIyLThmZDYtZmY3ODZiOGMzMWY2In0.rGz813SuDLy6KYhWJl3M4Y-UiwX03hTWK5Q9go8XvHIJYnU6ofkzi7AG3LFsMqgJcA4I7IuEkdyFSO4zz2lAgCtP8LIEMox6wACP48D2OgGOxQNYJe6ekMm57Ez_8qtQo50cus1MemMxa2fJ4INu9-oNJV3HkCOMMEngnTJuhiIQXkpsQYWFKG2nzalQEY4qPVp9tp8UxuCncSPp_Exug3W6bPYHup4NcjmcAKwKnGo_NQI97bGcQmJs16CeUkOHl1pJgefrW4GG4XvQP1QYIyFitpFw4L6NdHgA_YDBAd-228tzKnhZUcPlvvrSEVJ7Xps5UyjXJAAYVVxBdoruWQ';
 const costPriceId = 137719;
 const incomeId = 137721;
-
+const file = 'app.log';
 
 $apiClient = new AmoCRMApiClient();
 try {
@@ -35,6 +35,12 @@ try {
     return http_response_code(500);
 }
 
+function writeLog($message) {
+    $file = fopen(file, 'a');
+    fwrite($file, $message . PHP_EOL);
+    fclose($file);
+}
+
 // Если пришел запрос POST
 if(isset($_POST)) {
     $leadId = 0;
@@ -48,7 +54,7 @@ if(isset($_POST)) {
         echo 'Id of lead is not found';
         return http_response_code(400);
     }
-
+    writeLog(serialize(getProcessedLeads()));
     if(isLeadInProcessed($leadId)) {
         removeProcessedLead($leadId);
         return http_response_code(304);

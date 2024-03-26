@@ -10,8 +10,8 @@ const KEY_SAVED = 'data';
  */
 function putLeadToProcess(string|int $leadId): void {
     $array = getProcessedLeads();
-    array_push($array, $leadId);
-    $newJsonData = json_encode($array);
+    $array[] = $leadId;
+    $newJsonData = serialize($array);
     file_put_contents(PROCESS_FILE, $newJsonData);
 }
 
@@ -24,7 +24,7 @@ function getProcessedLeads(): array {
     if(empty($jsonData)) {
         return array();
     }
-    return json_decode($jsonData, true);
+    return unserialize($jsonData);
 }
 
 /**
@@ -36,7 +36,7 @@ function removeProcessedLead($leadId): void {
     $array = array_reverse($array);
     $result = array_search($leadId, $array);
     unset($array[$result]);
-    $newJsonData = json_encode($array);
+    $newJsonData = serialize($array);
     file_put_contents(PROCESS_FILE, $newJsonData);
 }
 
