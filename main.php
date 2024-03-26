@@ -4,6 +4,7 @@ use AmoCRM\Client\AmoCRMApiClient;
 use AmoCRM\Client\LongLivedAccessToken;
 use AmoCRM\Collections\CustomFieldsValuesCollection;
 use AmoCRM\Exceptions\AmoCRMApiException;
+use AmoCRM\Exceptions\AmoCRMMissedTokenException;
 use AmoCRM\Exceptions\AmoCRMoAuthApiException;
 use AmoCRM\Models\CustomFieldsValues\NumericCustomFieldValuesModel;
 use AmoCRM\Models\CustomFieldsValues\ValueCollections\NumericCustomFieldValueCollection;
@@ -16,33 +17,27 @@ const costPriceId = 137719;
 const incomeId = 137721;
 
 
-const file = 'app.log';
-
 $apiClient = new AmoCRMApiClient();
 try {
     $longLivedAccessToken = new LongLivedAccessToken(AUTH_TOKEN);
 } catch (\AmoCRM\Exceptions\InvalidArgumentException $e) {
-    echo 'Invalid Long lived acces token';
+    echo 'Аргумент неверного типа';
     return http_response_code(500);
 }
 
 $apiClient->setAccessToken($longLivedAccessToken)
     ->setAccountBaseDomain('njvesus.amocrm.ru');
 
-$leadsService = $apiClient->leads();
-$updatedLeads = array();
-
-function writeLog($message) {
-    $file = fopen(file, 'a');
-    fwrite($file, $message . PHP_EOL);
-    fclose($file);
+try {
+    $leadsService = $apiClient->leads();
+} catch (AmoCRMMissedTokenException $e) {
+    echo 'Запрос не может быть выполнен, потому что токен отсуствует';
+    return http_response_code(500);
 }
-
 
 // Если пришел запрос POST
 if(isset($_POST)) {
     $leadId = 0;
-    writeLog(json_encode($_POST));
     if(isset($_POST['leads']['add'][0]['id'])) {
         $leadId = $_POST['leads']['add'][0]['id'];
     }
@@ -51,11 +46,9 @@ if(isset($_POST)) {
     }
     else {
         echo 'Id of lead is not found';
-        writeLog('Id of lead is not found');
         return http_response_code(400);
     }
-    writeLog($leadId);
-    writeLog(json_encode(getProcessedLeads()));
+
     if(isLeadInProcessed($leadId)) {
         removeProcessedLead($leadId);
         return http_response_code(304);
@@ -93,13 +86,11 @@ if(isset($_POST)) {
                     ->setValue($budget - $costPriceValue)
             )
     );
-    writeLog($budget - $costPriceValue);
     // Добавляем поле прибыль
     $customFields->add($incomeField);
     $lead->setCustomFieldsValues($customFields);
     try {
         // Обновляем сделку
-        writeLog('Обновление');
         $leadsService->updateOne($lead);
     } catch (AmoCRMApiException $e) {
         echo 'Failed to update';
